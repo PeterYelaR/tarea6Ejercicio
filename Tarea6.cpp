@@ -1,3 +1,8 @@
+// Programa: Clasificacion de rendimiento academico
+// Autor: Estudiante
+// Descripcion: Este programa analiza las notas de estudiantes usando arreglos
+// y permite hacer estadisticas, predicciones y clasificaciones simples
+
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -6,255 +11,263 @@
 #include <iomanip>
 using namespace std;
 
-// Declaración de funciones
-void calcularEstadisticas(const vector<float>&);
-void prediccionSimple(const vector<float>&);
-void segmentarDatos(const vector<string>&, const vector<float>&);
-void visualizarDatos(const vector<float>&);
-void ordenarDatos(vector<string>&, vector<float>&);
-void buscarEstudiante(const vector<string>&, const vector<float>&);
-void clasificarDesempeno(const vector<string>&, const vector<float>&);
-void detectarMejoria(const vector<string>&, const vector<float>&);
-void simularNotaFinal(const vector<string>&);
-void limpiarPantalla();
+// FUNCIONES UTILIZADAS
+double calcularMedia(vector<float> notas);
+float calcularMediana(vector<float> notas);
+float calcularModa(vector<float> notas);
+double calcularDesviacionEstandar(vector<float> notas);
+void prediccionSiguienteNota(vector<float> notas);
+void clasificarNotas(vector<string> nombres, vector<float> notas);
+void mostrarHistograma(vector<float> notas);
+void ordenarNotas(vector<string>& nombres, vector<float>& notas);
+void buscarEstudiante(vector<string> nombres, vector<float> notas);
+void compararDosRondas(vector<string> nombres, vector<float> notas);
+void simularNotaFinal(vector<string> nombres);
 void pausa();
 
 int main() {
-    int n;
+    int cantidad;
     cout << "Ingrese el numero de estudiantes: ";
-    while (!(cin >> n) || n <= 0) {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "Entrada invalida. Ingrese un numero positivo: ";
-    }
+    cin >> cantidad;
 
-    vector<string> nombres(n);
-    vector<float> calificaciones(n);
+    vector<string> nombres(cantidad);
+    vector<float> notas(cantidad);
 
     // Ingreso de datos
-    for (int i = 0; i < n; ++i) {
+    for (int i = 0; i < cantidad; i++) {
         cout << "Nombre del estudiante " << i + 1 << ": ";
         cin >> ws;
         getline(cin, nombres[i]);
 
-        cout << "Calificacion de " << nombres[i] << " (0 a 10): ";
-        while (!(cin >> calificaciones[i]) || calificaciones[i] < 0 || calificaciones[i] > 10) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Entrada invalida. Ingrese calificacion entre 0 y 10: ";
-        }
+        cout << "Nota del estudiante (0 a 10): ";
+        cin >> notas[i];
     }
 
-    // Menú interactivo
     int opcion;
     do {
-        limpiarPantalla();
-        cout << "\n--- MENU DE OPCIONES ---\n";
-        cout << "1. Calcular estadisticas\n";
-        cout << "2. Prediccion simple\n";
-        cout << "3. Segmentar datos\n";
-        cout << "4. Visualizar datos (histograma)\n";
-        cout << "5. Ordenar datos\n";
-        cout << "6. Buscar estudiante\n";
-        cout << "7. Clasificacion por desempeño\n";
-        cout << "8. Deteccion de mejoria\n";
-        cout << "9. Simulacion de nota final\n";
-        cout << "0. Salir\n";
-        cout << "Seleccione una opcion: ";
+        cout << "\n\nMENU PRINCIPAL" << endl;
+        cout << "1. Calcular estadisticas" << endl;
+        cout << "2. Predecir siguiente nota" << endl;
+        cout << "3. Clasificar notas (alto, medio, bajo)" << endl;
+        cout << "4. Mostrar histograma" << endl;
+        cout << "5. Ordenar notas" << endl;
+        cout << "6. Buscar estudiante por nombre" << endl;
+        cout << "7. Comparar segunda ronda de notas" << endl;
+        cout << "8. Simular promedio final" << endl;
+        cout << "0. Salir" << endl;
+        cout << "Ingrese una opcion: ";
         cin >> opcion;
 
-        switch(opcion) {
-            case 1: calcularEstadisticas(calificaciones); break;
-            case 2: prediccionSimple(calificaciones); break;
-            case 3: segmentarDatos(nombres, calificaciones); break;
-            case 4: visualizarDatos(calificaciones); break;
-            case 5: ordenarDatos(nombres, calificaciones); break;
-            case 6: buscarEstudiante(nombres, calificaciones); break;
-            case 7: clasificarDesempeno(nombres, calificaciones); break;
-            case 8: detectarMejoria(nombres, calificaciones); break;
-            case 9: simularNotaFinal(nombres); break;
-            case 0: cout << "Saliendo del programa...\n"; break;
-            default: cout << "Opcion invalida.\n"; pausa();
+        switch (opcion) {
+            case 1:
+                cout << fixed << setprecision(2);
+                cout << "Media: " << calcularMedia(notas) << endl;
+                cout << "Mediana: " << calcularMediana(notas) << endl;
+                cout << "Moda: " << calcularModa(notas) << endl;
+                cout << "Desviacion estandar: " << calcularDesviacionEstandar(notas) << endl;
+                pausa();
+                break;
+            case 2:
+                prediccionSiguienteNota(notas);
+                break;
+            case 3:
+                clasificarNotas(nombres, notas);
+                break;
+            case 4:
+                mostrarHistograma(notas);
+                break;
+            case 5:
+                ordenarNotas(nombres, notas);
+                break;
+            case 6:
+                buscarEstudiante(nombres, notas);
+                break;
+            case 7:
+                compararDosRondas(nombres, notas);
+                break;
+            case 8:
+                simularNotaFinal(nombres);
+                break;
+            case 0:
+                cout << "Saliendo del programa..." << endl;
+                break;
+            default:
+                cout << "Opcion invalida. Intente de nuevo." << endl;
         }
     } while (opcion != 0);
 
     return 0;
 }
 
-// ------------------------ FUNCIONES ------------------------
+// FUNCIONES AUXILIARES
 
-void calcularEstadisticas(const vector<float>& notas) {
-    float suma = 0;
-    for (float nota : notas) suma += nota;
-    float media = suma / notas.size();
+double calcularMedia(vector<float> notas) {
+    double suma = 0;
+    for (int i = 0; i < notas.size(); i++) {
+        suma += notas[i];
+    }
+    return suma / notas.size();
+}
 
-    vector<float> ordenadas = notas;
-    sort(ordenadas.begin(), ordenadas.end());
-    float mediana = (ordenadas.size() % 2 == 0) ? 
-                    (ordenadas[ordenadas.size()/2 - 1] + ordenadas[ordenadas.size()/2]) / 2 :
-                    ordenadas[ordenadas.size()/2];
+float calcularMediana(vector<float> notas) {
+    sort(notas.begin(), notas.end());
+    int n = notas.size();
+    if (n % 2 == 0) {
+        return (notas[n/2 - 1] + notas[n/2]) / 2;
+    } else {
+        return notas[n/2];
+    }
+}
 
+float calcularModa(vector<float> notas) {
     map<float, int> frecuencia;
-    for (float nota : notas) frecuencia[nota]++;
-    int maxFreq = 0;
+    for (int i = 0; i < notas.size(); i++) {
+        frecuencia[notas[i]]++;
+    }
+    int max = 0;
     float moda = notas[0];
-    for (auto par : frecuencia) {
-        if (par.second > maxFreq) {
-            maxFreq = par.second;
-            moda = par.first;
+    map<float, int>::iterator it;
+    for (it = frecuencia.begin(); it != frecuencia.end(); ++it) {
+        if (it->second > max) {
+            max = it->second;
+            moda = it->first;
         }
     }
-
-    float sumaCuadrados = 0;
-    for (float nota : notas) sumaCuadrados += pow(nota - media, 2);
-    float desviacion = sqrt(sumaCuadrados / notas.size());
-
-    cout << fixed << setprecision(2);
-    cout << "\nMedia: " << media;
-    cout << "\nMediana: " << mediana;
-    cout << "\nModa: " << moda;
-    cout << "\nDesviacion estandar: " << desviacion << "\n";
-    pausa();
+    return moda;
 }
 
-void prediccionSimple(const vector<float>& notas) {
+double calcularDesviacionEstandar(vector<float> notas) {
+    double media = calcularMedia(notas);
+    double suma = 0;
+    for (int i = 0; i < notas.size(); i++) {
+        suma += pow(notas[i] - media, 2);
+    }
+    return sqrt(suma / notas.size());
+}
+
+void prediccionSiguienteNota(vector<float> notas) {
     if (notas.size() < 2) {
-        cout << "No hay suficientes datos para predecir.\n";
-        pausa();
+        cout << "No hay suficientes datos para predecir." << endl;
         return;
     }
-    float sumaDiferencias = 0;
-    for (size_t i = 1; i < notas.size(); ++i)
-        sumaDiferencias += notas[i] - notas[i - 1];
-
-    float promedioDiferencia = sumaDiferencias / (notas.size() - 1);
-    float prediccion = notas.back() + promedioDiferencia;
-
-    cout << fixed << setprecision(2);
-    cout << "Prediccion de la proxima nota: " << prediccion << "\n";
+    float sumaDif = 0;
+    for (int i = 1; i < notas.size(); i++) {
+        sumaDif += notas[i] - notas[i-1];
+    }
+    float promedioDif = sumaDif / (notas.size() - 1);
+    float siguiente = notas[notas.size()-1] + promedioDif;
+    cout << "Siguiente nota estimada: " << siguiente << endl;
     pausa();
 }
 
-void segmentarDatos(const vector<string>& nombres, const vector<float>& notas) {
-    float suma = 0;
-    for (float nota : notas) suma += nota;
-    float media = suma / notas.size();
-
-    cout << "\n-- Estudiantes por encima de la media --\n";
-    for (size_t i = 0; i < notas.size(); ++i)
-        if (notas[i] > media) cout << nombres[i] << " - " << notas[i] << "\n";
-
-    cout << "\n-- Estudiantes por debajo o igual a la media --\n";
-    for (size_t i = 0; i < notas.size(); ++i)
-        if (notas[i] <= media) cout << nombres[i] << " - " << notas[i] << "\n";
-
-    pausa();
-}
-
-void visualizarDatos(const vector<float>& notas) {
-    cout << "\nHistograma de calificaciones:\n";
-    for (float nota : notas) {
-        cout << fixed << setprecision(1) << nota << ": ";
-        int barras = static_cast<int>(nota * 5);
-        for (int i = 0; i < barras; ++i) cout << "#";
-        cout << "\n";
+void clasificarNotas(vector<string> nombres, vector<float> notas) {
+    cout << "\nAlto (>=8.5):" << endl;
+    for (int i = 0; i < notas.size(); i++) {
+        if (notas[i] >= 8.5) {
+            cout << nombres[i] << " - " << notas[i] << endl;
+        }
+    }
+    cout << "\nMedio (6 a 8.4):" << endl;
+    for (int i = 0; i < notas.size(); i++) {
+        if (notas[i] >= 6 && notas[i] < 8.5) {
+            cout << nombres[i] << " - " << notas[i] << endl;
+        }
+    }
+    cout << "\nBajo (<6):" << endl;
+    for (int i = 0; i < notas.size(); i++) {
+        if (notas[i] < 6) {
+            cout << nombres[i] << " - " << notas[i] << endl;
+        }
     }
     pausa();
 }
 
-void ordenarDatos(vector<string>& nombres, vector<float>& notas) {
-    for (size_t i = 0; i < notas.size(); ++i) {
-        for (size_t j = i + 1; j < notas.size(); ++j) {
+void mostrarHistograma(vector<float> notas) {
+    cout << "\nHistograma de notas:\n";
+    for (int i = 0; i < notas.size(); i++) {
+        cout << fixed << setprecision(1) << notas[i] << ": ";
+        int cantidad = int(notas[i] * 2);
+        for (int j = 0; j < cantidad; j++) cout << "*";
+        cout << endl;
+    }
+    pausa();
+}
+
+void ordenarNotas(vector<string>& nombres, vector<float>& notas) {
+    for (int i = 0; i < notas.size(); i++) {
+        for (int j = i+1; j < notas.size(); j++) {
             if (notas[j] > notas[i]) {
                 swap(notas[i], notas[j]);
                 swap(nombres[i], nombres[j]);
             }
         }
     }
-    cout << "\nDatos ordenados descendente:\n";
-    for (size_t i = 0; i < notas.size(); ++i)
-        cout << nombres[i] << ": " << notas[i] << "\n";
+    cout << "\nNotas ordenadas (descendente):" << endl;
+    for (int i = 0; i < notas.size(); i++) {
+        cout << nombres[i] << ": " << notas[i] << endl;
+    }
     pausa();
 }
 
-void buscarEstudiante(const vector<string>& nombres, const vector<float>& notas) {
+void buscarEstudiante(vector<string> nombres, vector<float> notas) {
     string buscado;
-    cout << "Ingrese el nombre a buscar: ";
+    cout << "Ingrese el nombre del estudiante a buscar: ";
     cin >> ws;
     getline(cin, buscado);
-
-    for (size_t i = 0; i < nombres.size(); ++i) {
+    bool encontrado = false;
+    for (int i = 0; i < nombres.size(); i++) {
         if (nombres[i] == buscado) {
-            cout << "Estudiante encontrado: " << nombres[i] << " - Nota: " << notas[i] << "\n";
-            pausa();
-            return;
+            cout << "Nota de " << nombres[i] << ": " << notas[i] << endl;
+            encontrado = true;
+            break;
         }
     }
-    cout << "Estudiante no encontrado.\n";
-    pausa();
-}
-
-void clasificarDesempeno(const vector<string>& nombres, const vector<float>& notas) {
-    cout << "\n-- Alto (>=8.5) --\n";
-    for (size_t i = 0; i < notas.size(); ++i)
-        if (notas[i] >= 8.5) cout << nombres[i] << " - " << notas[i] << "\n";
-
-    cout << "\n-- Medio (6.0 a 8.49) --\n";
-    for (size_t i = 0; i < notas.size(); ++i)
-        if (notas[i] >= 6 && notas[i] < 8.5) cout << nombres[i] << " - " << notas[i] << "\n";
-
-    cout << "\n-- Bajo (<6.0) --\n";
-    for (size_t i = 0; i < notas.size(); ++i)
-        if (notas[i] < 6) cout << nombres[i] << " - " << notas[i] << "\n";
-    pausa();
-}
-
-void detectarMejoria(const vector<string>& nombres, const vector<float>& notas) {
-    vector<float> nuevaNota(notas.size());
-    for (size_t i = 0; i < nombres.size(); ++i) {
-        cout << "Nueva calificacion de " << nombres[i] << ": ";
-        while (!(cin >> nuevaNota[i]) || nuevaNota[i] < 0 || nuevaNota[i] > 10) {
-            cin.clear();
-            cin.ignore(1000, '\n');
-            cout << "Entrada invalida. Ingrese calificacion entre 0 y 10: ";
-        }
-    }
-    cout << "\n-- Comparacion de desempeño --\n";
-    for (size_t i = 0; i < nombres.size(); ++i) {
-        string resultado = (nuevaNota[i] > notas[i]) ? "Mejoró" :
-                           (nuevaNota[i] < notas[i]) ? "Empeoró" : "Igual";
-        cout << nombres[i] << ": " << notas[i] << " -> " << nuevaNota[i] << " (" << resultado << ")\n";
+    if (!encontrado) {
+        cout << "Estudiante no encontrado." << endl;
     }
     pausa();
 }
 
-void simularNotaFinal(const vector<string>& nombres) {
-    float peso1, peso2;
-    cout << "Ingrese porcentaje para tareas: ";
-    cin >> peso1;
-    cout << "Ingrese porcentaje para examen: ";
-    cin >> peso2;
+void compararDosRondas(vector<string> nombres, vector<float> notas) {
+    vector<float> nuevasNotas(notas.size());
+    cout << "Ingrese la segunda ronda de notas:" << endl;
+    for (int i = 0; i < notas.size(); i++) {
+        cout << nombres[i] << ": ";
+        cin >> nuevasNotas[i];
+    }
+    for (int i = 0; i < notas.size(); i++) {
+        string estado;
+        if (nuevasNotas[i] > notas[i]) estado = "Mejoro";
+        else if (nuevasNotas[i] < notas[i]) estado = "Empeoro";
+        else estado = "Igual";
+        cout << nombres[i] << ": " << notas[i] << " -> " << nuevasNotas[i] << " (" << estado << ")\n";
+    }
+    pausa();
+}
 
-    if (peso1 + peso2 != 100) {
-        cout << "Los porcentajes deben sumar 100.\n";
+void simularNotaFinal(vector<string> nombres) {
+    float pesoTareas, pesoExamen;
+    cout << "Ingrese porcentaje de tareas: ";
+    cin >> pesoTareas;
+    cout << "Ingrese porcentaje de examen: ";
+    cin >> pesoExamen;
+
+    if (pesoTareas + pesoExamen != 100) {
+        cout << "Los porcentajes deben sumar 100." << endl;
         pausa();
         return;
     }
 
-    for (const string& nombre : nombres) {
+    for (int i = 0; i < nombres.size(); i++) {
         float tarea, examen;
-        cout << "\nCalificacion de tareas de " << nombre << ": ";
+        cout << "\nNota de tareas de " << nombres[i] << ": ";
         cin >> tarea;
-        cout << "Calificacion de examen de " << nombre << ": ";
+        cout << "Nota de examen de " << nombres[i] << ": ";
         cin >> examen;
-        float final = (tarea * peso1 + examen * peso2) / 100.0;
-        cout << "Nota final: " << final << " -> " << (final >= 6.0 ? "Aprobado" : "Reprobado") << "\n";
+        float promedio = (tarea * pesoTareas + examen * pesoExamen) / 100;
+        cout << "Promedio final: " << promedio << " -> " << (promedio >= 6 ? "Aprobado" : "Reprobado") << endl;
     }
     pausa();
-}
-
-void limpiarPantalla() {
-    cout << "\033[2J\033[1;1H"; // Limpia la consola en la mayoría de terminales Unix
 }
 
 void pausa() {
@@ -262,4 +275,3 @@ void pausa() {
     cin.ignore();
     cin.get();
 }
-
